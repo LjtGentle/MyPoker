@@ -72,6 +72,23 @@ func ReadFile(filename string) (alices, bobs []string, results []int) {
 	return
 }
 
+// PressIntoPosition 检索出现的次数入坑map
+func PressIntoPosition(cardSize string)(resMap map[int32]int) {
+	//初始化空间
+	resMap = make(map[int32]int,5)
+	//遍历入坑
+	for _, value := range cardSize {
+		_, ok := resMap[value]
+		if ok {
+			resMap[value] += 1
+		}else {
+			resMap[value] = 1
+		}
+	}
+	return
+}
+
+
 // 根据手牌判断 牌型
 func JudgmentGroup(cards string) (cardType CardType, cardSizes, cardColors []string) {
 	// 遍历分开手牌的大小和颜色
@@ -130,6 +147,47 @@ func JudgmentGroup(cards string) (cardType CardType, cardSizes, cardColors []str
 		cardType = 6
 		return
 	}
+
+	// 新判断哪张重复，重复多少次
+	cardSize := StringSliceToString(cardSizes)
+	reMap := PressIntoPosition(cardSize)
+	k3 := 0
+	k2 := 0
+	for _,v := range reMap {
+		if v==4 {
+			cardType = 3
+			return
+		}
+		if v == 3 {
+			k3 += 1
+			continue
+		}
+		if v == 2 {
+			k2 += 1
+			continue
+		}
+	}
+	if k3==1 && k2==1 {
+		cardType = 4
+		return
+	}
+	if k3==1 && k2==0 {
+		cardType = 7
+		return
+	}
+	if k2 == 2 {
+		cardType = 8
+		return
+	}
+	if k2 == 1 {
+		cardType = 9
+		return
+	}
+	cardType = 10
+	return
+
+
+
 	//  判断重复张数
 	// var sum []int
 	sums := make([]int, len(cardSizes)/2+1)
@@ -143,7 +201,7 @@ func JudgmentGroup(cards string) (cardType CardType, cardSizes, cardColors []str
 		// fmt.Println("sum=",sums[i])
 	}
 	k1 := 0 // 记录三个
-	k2 := 0 // 记录两个
+	k2 = 0 // 记录两个
 	for _, v := range sums {
 		if v >= 4 {
 			// 为四条出函数
@@ -322,7 +380,7 @@ func TranNums(card string) (f32s []float32) {
 func TranNumsNoColor(card string) (f32s []float32) {
 	f32s = make([]float32, len(card))
 	for i := 0; i < len(card); i++ {
-		f32s[i] = tranNumColor(card[i])
+		f32s[i] = tranNumFace(card[i])
 		// if card[i] == 0 {
 		// 	fmt.Println("TranNumsNoColor card[i] = 0")
 		// }
@@ -436,10 +494,12 @@ func aPairCom(cardLen int, card ...string) (result int) {
 	}
 	// 传进来的参数两个
 	if len(card) == 2 {
-		if pairs[0] > pairs[1] {
+		val1 := tranNumFace(pairs[0])
+		val2 := tranNumFace(pairs[1])
+		if val1 > val2{
 			result = 1
 			return
-		} else if pairs[0] < pairs[1] {
+		} else if val1 < val2 {
 			result = 2
 			return
 		} else {
@@ -713,7 +773,7 @@ func PokerMan() {
 	results := make([]int, 1024)
 	alices, bobs, results = ReadFile(file)
 	// return
-
+	t1 := time.Now()
 	// for i:=0; i < len(alices); i ++ {
 	// 	fmt.Printf("alices[%#v]=%#v\n",i,alices[i])
 	// 	fmt.Printf("bobs[%#v]=%#v\n",i,bobs[i])
@@ -769,11 +829,13 @@ func PokerMan() {
 
 		if result != results[i] {
 			k++
-			//fmt.Printf("[%#v]判断错误--->alice:%#v,bob:%#v<----- ===>文档的结果：%#v, 我的结果:%#v <==\n",k, alices[i], bobs[i],results[i],result)
+			fmt.Printf("[%#v]判断错误--->alice:%#v,bob:%#v<----- ===>文档的结果：%#v, 我的结果:%#v <==\n",k, alices[i], bobs[i],results[i],result)
 		} else {
 			//fmt.Println("判断正确222222")
 		}
 	}
+	t2 := time.Now()
+	fmt.Println("timetime--->",t2.Sub(t1))
 }
 
 func main() {
